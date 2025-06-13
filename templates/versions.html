@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% set active_page = "versions" %}
+
+{% block title %}版本管理{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-code-branch me-2"></i>版本管理</h2>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVersionModal">
+                <i class="fas fa-plus-circle me-2"></i>添加版本
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-white">
+                    <i class="fas fa-info-circle me-2"></i>当前激活版本
+                </div>
+                <div class="card-body text-center">
+                    {% if active_version %}
+                    <div class="display-4 fw-bold text-warning">{{ active_version.version_number }}</div>
+                    <p class="text-muted">最新稳定版本</p>
+                    {% else %}
+                    <div class="display-4 fw-bold text-warning">无</div>
+                    <p class="text-muted">未设置激活版本</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-white">
+                    <i class="fas fa-exclamation-triangle me-2"></i>强制更新版本
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        所有用户必须升级到 v2.0.1 及以上版本
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            v1.5.2
+                            <span class="badge bg-danger">已过期</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            v1.5.1
+                            <span class="badge bg-danger">已过期</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            v1.5.0
+                            <span class="badge bg-danger">已过期</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-list me-2"></i>版本列表</span>
+                    <span class="badge bg-light text-dark">12 个版本</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>版本号</th>
+                                    <th>发布日期</th>
+                                    <th>更新类型</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for version in versions %}
+                                <tr {% if version.is_active %}class="table-success"{% endif %}>
+                                    <td>
+                                        <span class="badge bg-primary">{{ version.version_number }}</span>
+                                        {% if version == versions[0] %}
+                                        <span class="ms-2">最新版</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ version.release_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% if version.force_update %}
+                                        <span class="text-danger fw-bold"><i class="fas fa-exclamation-circle me-1"></i>强制更新</span>
+                                        {% else %}
+                                        常规更新
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if version.is_active %}
+                                        <span class="badge bg-success">激活</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">未激活</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('set_active_version', version_id=version.id) }}" class="d-inline">
+                                            {% if not version.is_active %}
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-check me-1"></i>激活
+                                            </button>
+                                            {% endif %}
+                                        </form>
+                                        <form method="POST" action="{{ url_for('delete_version', version_id=version.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash me-1"></i>删除
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">下一页</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加版本模态框 -->
+<div class="modal fade" id="addVersionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>添加新版本</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addVersionForm">
+                    <div class="mb-3">
+                        <label class="form-label">版本号</label>
+                        <input type="text" class="form-control" placeholder="例如: v1.2.0" id="versionNumber">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">发布日期</label>
+                        <input type="date" class="form-control" id="releaseDate">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">下载地址</label>
+                        <input type="url" class="form-control" placeholder="https://..." id="downloadUrl">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">更新日志</label>
+                        <textarea class="form-control" rows="3" placeholder="版本更新内容..." id="changelog"></textarea>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="forceUpdate">
+                        <label class="form-check-label" for="forceUpdate">强制用户更新到此版本</label>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="setActive" checked>
+                        <label class="form-check-label" for="setActive">设为当前激活版本</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="addVersionBtn">添加版本</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 定义提示函数（必须添加）
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+
+        // 5秒后自动消失
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+
+    // 设置当前日期为默认日期
+    document.getElementById('releaseDate').valueAsDate = new Date();
+
+    // 添加版本按钮点击事件
+    document.getElementById('addVersionBtn').addEventListener('click', function() {
+        const version = document.getElementById('versionNumber').value;
+        const date = document.getElementById('releaseDate').value;
+        const url = document.getElementById('downloadUrl').value;
+        const changelog = document.getElementById('changelog').value;
+        const forceUpdate = document.getElementById('forceUpdate').checked;
+        const setActive = document.getElementById('setActive').checked;
+
+        // 发送AJAX请求到后端生成卡密
+        fetch('/versions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                version_number: version,
+                release_date: date,
+                download_url: url,
+                changelog: changelog,
+                force_update: forceUpdate,
+                set_active: setActive
+            })
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', `成功更新版本`);
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addVersionModal'));
+                modal.hide();
+                // 刷新页面以显示新生成的卡密
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showAlert('danger', data.message || '更新版本失败');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', '请求失败: ' + error.message);
+        });
+
+    });
+
+</script>
+{% endblock %}

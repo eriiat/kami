@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% set active_page = "announcements" %}
+
+{% block title %}公告管理{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-bullhorn me-2"></i>公告管理</h2>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAnnouncementModal">
+                <i class="fas fa-plus-circle me-2"></i>添加公告
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-list me-2"></i>公告列表</span>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="activeOnly" checked>
+                        <label class="form-check-label" for="activeOnly">仅显示激活公告</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for announcement in announcements %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ announcement.title }}</h5>
+                                <div>
+                                    {% if announcement.is_active %}
+                                    <span class="badge bg-success me-2">激活</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary me-2">已停用</span>
+                                    {% endif %}
+                                    <small>{{ announcement.publish_time.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                            </div>
+                            <p class="mb-1 mt-2">{{ announcement.content }}</p>
+                            <div class="mt-3">
+                                <form method="POST" action="{{ url_for('toggle_announcement', announcement_id=announcement.id) }}" class="d-inline">
+                                    {% if announcement.is_active %}
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-ban me-1"></i>停用
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-check me-1"></i>激活
+                                    </button>
+                                    {% endif %}
+                                </form>
+                                <form method="POST" action="{{ url_for('delete_announcement', announcement_id=announcement.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1">
+                                        <i class="fas fa-trash me-1"></i>删除
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">下一页</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-chart-bar me-2"></i>公告统计
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-around text-center mb-4">
+                        <div>
+                            <div class="fs-2 fw-bold">24</div>
+                            <div class="text-muted">总公告数</div>
+                        </div>
+                        <div>
+                            <div class="fs-2 fw-bold">16</div>
+                            <div class="text-muted">激活公告</div>
+                        </div>
+                        <div>
+                            <div class="fs-2 fw-bold">8</div>
+                            <div class="text-muted">已停用</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">最近30天公告发布</label>
+                        <div class="progress mb-2" style="height: 20px;">
+                            <div class="progress-bar" role="progressbar" style="width: 25%">第一周: 3</div>
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 35%">第二周: 5</div>
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 20%">第三周: 2</div>
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 20%">第四周: 2</div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        提示：系统最多显示3条激活公告，超过3条时最早的公告将自动停用。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加公告模态框 -->
+<div class="modal fade" id="addAnnouncementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-bullhorn me-2"></i>添加新公告</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAnnouncementForm">
+                    <div class="mb-3">
+                        <label class="form-label">公告标题</label>
+                        <input type="text" class="form-control" placeholder="输入公告标题" id="announcementTitle">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">公告内容</label>
+                        <textarea class="form-control" rows="6" placeholder="输入公告内容..." id="announcementContent"></textarea>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="isActive" checked>
+                        <label class="form-check-label" for="isActive">激活此公告</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="addAnnouncementBtn">发布公告</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 添加公告按钮点击事件
+    document.getElementById('addAnnouncementBtn').addEventListener('click', function() {
+        const title = document.getElementById('announcementTitle').value;
+        const content = document.getElementById('announcementContent').value;
+        const isActive = document.getElementById('isActive').checked;
+        fetch('/announcements', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: title,
+                content: content,
+                isActive: isActive
+            })
+        })
+
+        // 关闭模态框
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addAnnouncementModal'));
+        modal.hide();
+    });
+</script>
+{% endblock %}

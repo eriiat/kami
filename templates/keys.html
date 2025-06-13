@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% set active_page = "keys" %}
+
+{% block title %}卡密管理{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-key me-2"></i>卡密管理</h2>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateKeyModal">
+                <i class="fas fa-plus-circle me-2"></i>生成卡密
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-filter me-2"></i>卡密筛选
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">状态</label>
+                        <select class="form-select" id="filterStatus">
+                            <option value="all">全部状态</option>
+                            <option value="未使用">未使用</option>
+                            <option value="已激活">已激活</option>
+                            <option value="已禁用">已禁用</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">生成日期范围</label>
+                        <div class="input-group">
+                            <input type="date" class="form-control" id="startDate">
+                            <span class="input-group-text">至</span>
+                            <input type="date" class="form-control" id="endDate">
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-outline-info w-100" id="applyFilter">
+                        <i class="fas fa-filter me-2"></i>应用筛选
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-list me-2"></i>卡密列表</span>
+                    <span class="badge bg-light text-dark">1,248 条记录</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>卡密</th>
+                                    <th>状态</th>
+                                    <th>使用时间</th>
+                                    <th>有效期</th>
+                                    <th>到期时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key in keys %}
+                                <tr>
+                                    <td>{{ key.key_value }}</td>
+                                    <td>
+                                        {% if key.status == '已激活' %}
+                                        <span class="badge bg-success">{{ key.status }}</span>
+                                        {% elif key.status == '未使用' %}
+                                        <span class="badge bg-secondary">{{ key.status }}</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">{{ key.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if key.use_time %}
+                                        {{ key.use_time.strftime('%Y-%m-%d') }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{key.duration}}
+                                    </td>
+                                    <td>
+                                        {% if key.expire_time %}
+                                        {{ key.expire_time.strftime('%Y-%m-%d') }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('toggle_key', key_id=key.id) }}" class="d-inline">
+                                            {% if key.status != '已禁用' %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-ban me-1"></i>禁用
+                                            </button>
+                                            {% else %}
+                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-check me-1"></i>启用
+                                            </button>
+                                            {% endif %}
+                                        </form>
+                                        <form method="POST" action="{{ url_for('delete_key', key_id=key.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger ms-1">
+                                                <i class="fas fa-trash me-1"></i>删除
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">下一页</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 生成卡密模态框 -->
+<div class="modal fade" id="generateKeyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-key me-2"></i>生成卡密</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addKeyForm">
+                    <div class="mb-3">
+                        <label class="form-label">生成数量</label>
+                        <input type="number" class="form-control" min="1" max="100" value="5" id="keyCount">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">有效期（天）</label>
+                        <input type="number" class="form-control" min="1" value="365" id="keyDuration">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">备注</label>
+                        <textarea class="form-control" rows="2" placeholder="添加备注信息..." id="keyRemarks"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="generateKeysBtn">生成卡密</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    // 定义提示函数（必须添加）
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+
+        // 5秒后自动消失
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 生成卡密按钮点击事件
+        const generateBtn = document.getElementById('generateKeysBtn');
+
+        if (generateBtn) {
+            // 只保留一个事件监听器
+            generateBtn.addEventListener('click', function() {
+                console.log("按钮被点击了！"); // 调试输出
+
+                const count = document.getElementById('keyCount').value;
+                const duration = document.getElementById('keyDuration').value;
+                const remarks = document.getElementById('keyRemarks').value;
+
+                // 简单验证
+                if (!count || count < 1) {
+                    showAlert('warning', '请填写有效的生成数量');
+                    return;
+                }
+
+                // 发送AJAX请求到后端生成卡密
+                fetch('/keys', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        count: count,
+                        duration: duration,
+                        remarks: remarks
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('success', `成功生成 ${count} 个卡密`);
+
+                        // 修复：正确关闭模态框
+                        const modalEl = document.getElementById('generateKeyModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        modal.hide();
+
+                        // 刷新页面以显示新生成的卡密
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showAlert('danger', data.message || '生成卡密失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('danger', '请求失败: ' + error.message);
+                });
+            });
+        }
+
+        // 应用筛选
+        document.getElementById('applyFilter').addEventListener('click', function() {
+            const status = document.getElementById('filterStatus').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            // 在实际应用中，这里应该根据筛选条件重新加载卡密列表
+            alert(`应用筛选条件:\n状态: ${status}\n日期范围: ${startDate || '开始'} 至 ${endDate || '结束'}`);
+        });
+    }); // 修复：添加了闭合的 }); 这里之前缺失
+</script>
+{% endblock %}

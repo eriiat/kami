@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% set active_page = "dashboard" %}
+
+{% block title %}控制面板{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>控制面板</h2>
+        <div>
+            <span class="badge bg-primary">今日: {{ today }}</span>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-primary">
+                        <i class="fas fa-key fa-2x"></i>
+                    </div>
+                    <div class="stats-number fw-bold fs-3">1,248</div>
+                    <div class="stats-title text-muted">总卡密数</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-success">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <div class="stats-number fw-bold fs-3">856</div>
+                    <div class="stats-title text-muted">已激活卡密</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-info">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <div class="stats-number fw-bold fs-3">392</div>
+                    <div class="stats-title text-muted">未使用卡密</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-warning">
+                        <i class="fas fa-code-branch fa-2x"></i>
+                    </div>
+                    <div class="stats-number fw-bold fs-3">12</div>
+                    <div class="stats-title text-muted">软件版本</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-history me-2"></i>最近使用记录
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>卡密</th>
+                                    <th>IP地址</th>
+                                    <th>时间</th>
+                                    <th>位置</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ABCD-EFGH-IJKL-MNOP</td>
+                                    <td>192.168.1.101</td>
+                                    <td>2023-06-12 14:30</td>
+                                    <td>北京市</td>
+                                </tr>
+                                <tr>
+                                    <td>ZYXW-VUTS-RQPO-NMLK</td>
+                                    <td>110.185.42.79</td>
+                                    <td>2023-06-12 11:15</td>
+                                    <td>上海市</td>
+                                </tr>
+                                <tr>
+                                    <td>POIU-YTRE-WQAS-DFGH</td>
+                                    <td>120.244.36.112</td>
+                                    <td>2023-06-11 18:45</td>
+                                    <td>广州市</td>
+                                </tr>
+                                <tr>
+                                    <td>QAZX-SWED-CFRV-TGBY</td>
+                                    <td>220.180.56.91</td>
+                                    <td>2023-06-11 09:22</td>
+                                    <td>深圳市</td>
+                                </tr>
+                                <tr>
+                                    <td>MNBD-ACQS-EFRV-GTHY</td>
+                                    <td>183.202.176.55</td>
+                                    <td>2023-06-10 22:10</td>
+                                    <td>成都市</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end">
+                        <a href="{{ url_for('usage_page') }}" class="btn btn-sm btn-outline-primary">查看更多</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-bullhorn me-2"></i>系统公告
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">系统维护通知</h5>
+                                <small>2023-06-15</small>
+                            </div>
+                            <p class="mb-1">本系统将于2023年6月20日凌晨2:00-4:00进行维护升级...</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">新版本发布</h5>
+                                <small>2023-06-10</small>
+                            </div>
+                            <p class="mb-1">软件版本v2.0.1已发布，新增多项功能并修复已知问题...</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">安全更新提醒</h5>
+                                <small>2023-06-05</small>
+                            </div>
+                            <p class="mb-1">请所有用户尽快升级到v2.0.0以上版本，修复了安全漏洞...</p>
+                        </a>
+                    </div>
+                    <div class="text-end mt-3">
+                        <a href="{{ url_for('announcements_page') }}" class="btn btn-sm btn-outline-success">查看全部公告</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
